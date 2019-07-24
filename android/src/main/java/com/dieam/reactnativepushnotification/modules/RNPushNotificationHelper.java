@@ -444,11 +444,23 @@ public class RNPushNotificationHelper {
             Notification info = notification.build();
             info.defaults |= Notification.DEFAULT_LIGHTS;
 
-            if (bundle.containsKey("tag")) {
-                String tag = bundle.getString("tag");
-                notificationManager.notify(tag, notificationID, info);
-            } else {
-                notificationManager.notify(notificationID, info);
+            boolean showInForeground = true;
+            boolean show = true;
+            if(bundle.containsKey("showInForeground")){
+                showInForeground = bundle.getBoolean("showInForeground");
+            }
+            if(!showInForeground && bundle.getBoolean("isForeground"))
+            {
+                show = false;
+            }
+            if(show)
+            {
+                if (bundle.containsKey("tag")) {
+                    String tag = bundle.getString("tag");
+                    notificationManager.notify(tag, notificationID, info);
+                } else {
+                    notificationManager.notify(notificationID, info);
+                }
             }
 
             // Can't use setRepeating for recurring notifications because setRepeating
