@@ -28,6 +28,7 @@ import android.app.ActivityManager.RunningAppProcessInfo;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.List;
 
 import android.util.Log;
 
@@ -39,10 +40,11 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
     private RNPushNotificationHelper mRNPushNotificationHelper;
     private final Random mRandomNumberGenerator = new Random(System.currentTimeMillis());
     private RNPushNotificationJsDelivery mJsDelivery;
+    private ReactContext _reactContext;
 
     public RNPushNotification(ReactApplicationContext reactContext) {
         super(reactContext);
-
+        _reactContext = reactContext;
         reactContext.addActivityEventListener(this);
 
         Application applicationContext = (Application) reactContext.getApplicationContext();
@@ -76,6 +78,7 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
         }
         return bundle;
     }
+
     public void onNewIntent(Intent intent) {
         Bundle bundle = this.getBundleFromIntent(intent);
         if (bundle != null) {
@@ -86,7 +89,8 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
     }
 
     private void registerNotificationsRegistration() {
-        IntentFilter intentFilter = new IntentFilter(getReactApplicationContext().getPackageName() + ".RNPushNotificationRegisteredToken");
+        IntentFilter intentFilter = new IntentFilter(
+                getReactApplicationContext().getPackageName() + ".RNPushNotificationRegisteredToken");
 
         getReactApplicationContext().registerReceiver(new BroadcastReceiver() {
             @Override
@@ -116,7 +120,8 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
                 mJsDelivery.notifyNotificationAction(bundle);
 
                 // Dismiss the notification popup.
-                NotificationManager manager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
+                NotificationManager manager = (NotificationManager) context
+                        .getSystemService(context.NOTIFICATION_SERVICE);
                 int notificationID = Integer.parseInt(bundle.getString("id"));
                 manager.cancel(notificationID);
             }
@@ -190,25 +195,30 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
         ApplicationBadgeHelper.INSTANCE.setApplicationIconBadgeNumber(getReactApplicationContext(), number);
     }
 
-    // removed @Override temporarily just to get it working on different versions of RN
+    // removed @Override temporarily just to get it working on different versions of
+    // RN
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
         onActivityResult(requestCode, resultCode, data);
     }
 
-    // removed @Override temporarily just to get it working on different versions of RN
+    // removed @Override temporarily just to get it working on different versions of
+    // RN
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Ignored, required to implement ActivityEventListener for RN 0.33
     }
 
     @ReactMethod
     /**
-     * Cancels all scheduled local notifications, and removes all entries from the notification
-     * centre.
+     * Cancels all scheduled local notifications, and removes all entries from the
+     * notification centre.
      *
      * We're attempting to keep feature parity with the RN iOS implementation in
-     * <a href="https://github.com/facebook/react-native/blob/master/Libraries/PushNotificationIOS/RCTPushNotificationManager.m#L289">RCTPushNotificationManager</a>.
+     * <a href=
+     * "https://github.com/facebook/react-native/blob/master/Libraries/PushNotificationIOS/RCTPushNotificationManager.m#L289">RCTPushNotificationManager</a>.
      *
-     * @see <a href="https://facebook.github.io/react-native/docs/pushnotificationios.html">RN docs</a>
+     * @see <a href=
+     *      "https://facebook.github.io/react-native/docs/pushnotificationios.html">RN
+     *      docs</a>
      */
     public void cancelAllLocalNotifications() {
         mRNPushNotificationHelper.cancelAllScheduledNotifications();
@@ -217,12 +227,15 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
 
     @ReactMethod
     /**
-     * Cancel scheduled notifications, and removes notifications from the notification centre.
+     * Cancel scheduled notifications, and removes notifications from the
+     * notification centre.
      *
-     * Note - as we are trying to achieve feature parity with iOS, this method cannot be used
-     * to remove specific alerts from the notification centre.
+     * Note - as we are trying to achieve feature parity with iOS, this method
+     * cannot be used to remove specific alerts from the notification centre.
      *
-     * @see <a href="https://facebook.github.io/react-native/docs/pushnotificationios.html">RN docs</a>
+     * @see <a href=
+     *      "https://facebook.github.io/react-native/docs/pushnotificationios.html">RN
+     *      docs</a>
      */
     public void cancelLocalNotifications(ReadableMap userInfo) {
         mRNPushNotificationHelper.cancelScheduledNotification(userInfo);
@@ -242,11 +255,12 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
     }
 
     private boolean isApplicationInForeground() {
-        ActivityManager activityManager = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
+        ActivityManager activityManager = (ActivityManager) _reactContext
+                .getSystemService(_reactContext.ACTIVITY_SERVICE);
         List<RunningAppProcessInfo> processInfos = activityManager.getRunningAppProcesses();
         if (processInfos != null) {
             for (RunningAppProcessInfo processInfo : processInfos) {
-                if (processInfo.processName.equals(getApplication().getPackageName())) {
+                if (processInfo.processName.equals(_reactContext.getApplicationContext().getPackageName())) {
                     if (processInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
                         for (String d : processInfo.pkgList) {
                             return true;
