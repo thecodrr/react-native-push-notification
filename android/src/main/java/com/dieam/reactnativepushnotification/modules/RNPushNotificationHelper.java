@@ -565,13 +565,16 @@ public class RNPushNotificationHelper {
                     Bundle randomData = (Bundle) data.get(getRandomNumberInRange(0, data.size() - 1));
                     bundle = randomData;
                     bundle.putParcelableArrayList("data", data);
+                    if (bundle.getString("id") == null) {
+                        bundle.putString("id", String.valueOf(mRandomNumberGenerator.nextInt()));
+                    }
                 }
                 bundle.putDouble("fireDate", newFireDate);
                 this.sendNotificationScheduled(bundle);
             }
         }
     }
-
+    private final Random mRandomNumberGenerator = new Random(System.currentTimeMillis());
     private static int getRandomNumberInRange(int min, int max) {
 
         if (min >= max) {
