@@ -563,11 +563,14 @@ public class RNPushNotificationHelper {
                 ArrayList<Parcelable> data = bundle.getParcelableArrayList("data");
                 if (data != null && data.size() >= 0) {
                     Bundle randomData = (Bundle) data.get(getRandomNumberInRange(0, data.size() - 1));
-                    bundle = randomData;
-                    bundle.putParcelableArrayList("data", data);
-                    if (bundle.getString("id") == null) {
-                        bundle.putString("id", String.valueOf(mRandomNumberGenerator.nextInt()));
+                    Bundle newBundle = new Bundle(randomData);
+                    newBundle.putParcelableArrayList("data", data);
+                    if (newBundle.getString("id") == null) {
+                        newBundle.putString("id", String.valueOf(mRandomNumberGenerator.nextInt()));
                     }
+                    newBundle.putDouble("fireDate", newFireDate);
+                    this.sendNotificationScheduled(newBundle);
+                    return;
                 }
                 bundle.putDouble("fireDate", newFireDate);
                 this.sendNotificationScheduled(bundle);
