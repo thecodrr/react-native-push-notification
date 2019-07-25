@@ -161,7 +161,6 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
         if (bundle.getString("id") == null) {
             bundle.putString("id", String.valueOf(mRandomNumberGenerator.nextInt()));
         }
-        bundle.putBoolean("isForeground", this.isApplicationInForeground());
         mRNPushNotificationHelper.sendToNotificationCentre(bundle);
     }
 
@@ -252,23 +251,5 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
     @ReactMethod
     public void registerNotificationActions(ReadableArray actions) {
         registerNotificationsReceiveNotificationActions(actions);
-    }
-
-    private boolean isApplicationInForeground() {
-        ActivityManager activityManager = (ActivityManager) _reactContext
-                .getSystemService(_reactContext.ACTIVITY_SERVICE);
-        List<RunningAppProcessInfo> processInfos = activityManager.getRunningAppProcesses();
-        if (processInfos != null) {
-            for (RunningAppProcessInfo processInfo : processInfos) {
-                if (processInfo.processName.equals(_reactContext.getApplicationContext().getPackageName())) {
-                    if (processInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                        for (String d : processInfo.pkgList) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
     }
 }

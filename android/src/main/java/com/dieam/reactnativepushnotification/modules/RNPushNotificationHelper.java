@@ -1,6 +1,5 @@
 package com.dieam.reactnativepushnotification.modules;
 
-
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
@@ -26,12 +25,16 @@ import android.util.Log;
 import com.dieam.reactnativepushnotification.helpers.ImageUtil;
 import com.facebook.react.bridge.ReadableMap;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.GregorianCalendar;
 import java.util.Random;
 import java.util.ArrayList;
@@ -59,7 +62,25 @@ public class RNPushNotificationHelper {
     public RNPushNotificationHelper(Application context) {
         this.context = context;
         this.config = new RNPushNotificationConfig(context);
-        this.scheduledNotificationsPersistence = context.getSharedPreferences(RNPushNotificationHelper.PREFERENCES_KEY, Context.MODE_PRIVATE);
+        this.scheduledNotificationsPersistence = context.getSharedPreferences(RNPushNotificationHelper.PREFERENCES_KEY,
+                Context.MODE_PRIVATE);
+    }
+
+    private boolean isApplicationInForeground() {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(context.ACTIVITY_SERVICE);
+        List<RunningAppProcessInfo> processInfos = activityManager.getRunningAppProcesses();
+        if (processInfos != null) {
+            for (RunningAppProcessInfo processInfo : processInfos) {
+                if (processInfo.processName.equals(context.getPackageName())) {
+                    if (processInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                        for (String d : processInfo.pkgList) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public Class getMainActivityClass() {
@@ -85,7 +106,8 @@ public class RNPushNotificationHelper {
         notificationIntent.putExtra(RNPushNotificationPublisher.NOTIFICATION_ID, notificationID);
         notificationIntent.putExtras(bundle);
 
-        return PendingIntent.getBroadcast(context, notificationID, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, notificationID, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public void sendNotificationScheduled(Bundle bundle) {
@@ -136,10 +158,10 @@ public class RNPushNotificationHelper {
         // notification to the user
         PendingIntent pendingIntent = toScheduleNotificationIntent(bundle);
 
-        Log.d(LOG_TAG, String.format("Setting a notification with id %s at time %s",
-                bundle.getString("id"), Long.toString(fireDate)));
+        Log.d(LOG_TAG, String.format("Setting a notification with id %s at time %s", bundle.getString("id"),
+                Long.toString(fireDate)));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if(allowWhileIdle && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (allowWhileIdle && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 getAlarmManager().setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fireDate, pendingIntent);
             } else {
                 getAlarmManager().setExact(AlarmManager.RTC_WAKEUP, fireDate, pendingIntent);
@@ -157,7 +179,7 @@ public class RNPushNotificationHelper {
             Uri largeIconUri = null;
             try {
                 largeIconUri = Uri.parse(largeIcon);
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 Log.e(LOG_TAG, "Failed to parse largeIcon url", ex);
             }
 
@@ -195,7 +217,8 @@ public class RNPushNotificationHelper {
             }
 
             if (bundle.getString("message") == null) {
-                // this happens when a 'data' notification is received - we do not synthesize a local notification in this case
+                // this happens when a 'data' notification is received - we do not synthesize a
+                // local notification in this case
                 Log.d(LOG_TAG, "Cannot send to notification centre because there is no 'message' field in: " + bundle);
                 return;
             }
@@ -219,24 +242,24 @@ public class RNPushNotificationHelper {
             final String priorityString = bundle.getString("priority");
 
             if (priorityString != null) {
-                switch(priorityString.toLowerCase()) {
-                    case "max":
-                        priority = NotificationCompat.PRIORITY_MAX;
-                        break;
-                    case "high":
-                        priority = NotificationCompat.PRIORITY_HIGH;
-                        break;
-                    case "low":
-                        priority = NotificationCompat.PRIORITY_LOW;
-                        break;
-                    case "min":
-                        priority = NotificationCompat.PRIORITY_MIN;
-                        break;
-                    case "default":
-                        priority = NotificationCompat.PRIORITY_DEFAULT;
-                        break;
-                    default:
-                        priority = NotificationCompat.PRIORITY_HIGH;
+                switch (priorityString.toLowerCase()) {
+                case "max":
+                    priority = NotificationCompat.PRIORITY_MAX;
+                    break;
+                case "high":
+                    priority = NotificationCompat.PRIORITY_HIGH;
+                    break;
+                case "low":
+                    priority = NotificationCompat.PRIORITY_LOW;
+                    break;
+                case "min":
+                    priority = NotificationCompat.PRIORITY_MIN;
+                    break;
+                case "default":
+                    priority = NotificationCompat.PRIORITY_DEFAULT;
+                    break;
+                default:
+                    priority = NotificationCompat.PRIORITY_HIGH;
                 }
             }
 
@@ -244,27 +267,24 @@ public class RNPushNotificationHelper {
             final String visibilityString = bundle.getString("visibility");
 
             if (visibilityString != null) {
-                switch(visibilityString.toLowerCase()) {
-                    case "private":
-                        visibility = NotificationCompat.VISIBILITY_PRIVATE;
-                        break;
-                    case "public":
-                        visibility = NotificationCompat.VISIBILITY_PUBLIC;
-                        break;
-                    case "secret":
-                        visibility = NotificationCompat.VISIBILITY_SECRET;
-                        break;
-                    default:
-                        visibility = NotificationCompat.VISIBILITY_PRIVATE;
+                switch (visibilityString.toLowerCase()) {
+                case "private":
+                    visibility = NotificationCompat.VISIBILITY_PRIVATE;
+                    break;
+                case "public":
+                    visibility = NotificationCompat.VISIBILITY_PUBLIC;
+                    break;
+                case "secret":
+                    visibility = NotificationCompat.VISIBILITY_SECRET;
+                    break;
+                default:
+                    visibility = NotificationCompat.VISIBILITY_PRIVATE;
                 }
             }
 
             NotificationCompat.Builder notification = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                    .setContentTitle(title)
-                    .setTicker(bundle.getString("ticker"))
-                    .setVisibility(visibility)
-                    .setPriority(priority)
-                    .setAutoCancel(bundle.getBoolean("autoCancel", true));
+                    .setContentTitle(title).setTicker(bundle.getString("ticker")).setVisibility(visibility)
+                    .setPriority(priority).setAutoCancel(bundle.getBoolean("autoCancel", true));
 
             String group = bundle.getString("group");
             if (group != null) {
@@ -386,10 +406,11 @@ public class RNPushNotificationHelper {
             notification.setContentIntent(pendingIntent);
 
             if (!bundle.containsKey("vibrate") || bundle.getBoolean("vibrate")) {
-                long vibration = bundle.containsKey("vibration") ? (long) bundle.getDouble("vibration") : DEFAULT_VIBRATION;
+                long vibration = bundle.containsKey("vibration") ? (long) bundle.getDouble("vibration")
+                        : DEFAULT_VIBRATION;
                 if (vibration == 0)
                     vibration = DEFAULT_VIBRATION;
-                notification.setVibrate(new long[]{0, vibration});
+                notification.setVibrate(new long[] { 0, vibration });
             }
 
             JSONArray actionsArray = null;
@@ -430,10 +451,13 @@ public class RNPushNotificationHelper {
             // Remove the notification from the shared preferences once it has been shown
             // to avoid showing the notification again when the phone is rebooted. If the
             // notification is not removed, then every time the phone is rebooted, we will
-            // try to reschedule all the notifications stored in shared preferences and since
+            // try to reschedule all the notifications stored in shared preferences and
+            // since
             // these notifications will be in the past time, they will be shown immediately
-            // to the user which we shouldn't do. So, remove the notification from the shared
-            // preferences once it has been shown to the user. If it is a repeating notification
+            // to the user which we shouldn't do. So, remove the notification from the
+            // shared
+            // preferences once it has been shown to the user. If it is a repeating
+            // notification
             // it will be scheduled again.
             if (scheduledNotificationsPersistence.getString(notificationIdString, null) != null) {
                 SharedPreferences.Editor editor = scheduledNotificationsPersistence.edit();
@@ -446,15 +470,13 @@ public class RNPushNotificationHelper {
 
             boolean showInForeground = true;
             boolean show = true;
-            if(bundle.containsKey("showInForeground")){
+            if (bundle.containsKey("showInForeground")) {
                 showInForeground = bundle.getBoolean("showInForeground");
             }
-            if(!showInForeground && bundle.getBoolean("isForeground"))
-            {
+            if (!showInForeground && isApplicationInForeground()) {
                 show = false;
             }
-            if(show)
-            {
+            if (show) {
                 if (bundle.containsKey("tag")) {
                     String tag = bundle.getString("tag");
                     notificationManager.notify(tag, notificationID, info);
@@ -480,7 +502,8 @@ public class RNPushNotificationHelper {
         if (repeatType != null) {
             long fireDate = (long) bundle.getDouble("fireDate");
 
-            boolean validRepeatType = Arrays.asList("time", "month", "week", "day", "hour", "minute").contains(repeatType);
+            boolean validRepeatType = Arrays.asList("time", "month", "week", "day", "hour", "minute")
+                    .contains(repeatType);
 
             // Sanity checks
             if (!validRepeatType) {
@@ -489,55 +512,54 @@ public class RNPushNotificationHelper {
             }
 
             if ("time".equals(repeatType) && repeatTime <= 0) {
-                Log.w(LOG_TAG, "repeatType specified as time but no repeatTime " +
-                        "has been mentioned");
+                Log.w(LOG_TAG, "repeatType specified as time but no repeatTime " + "has been mentioned");
                 return;
             }
 
             long newFireDate = 0;
 
             switch (repeatType) {
-                case "time":
-                    newFireDate = fireDate + repeatTime;
-                    break;
-                case "month":
-                    final Calendar fireDateCalendar = new GregorianCalendar();
-                    fireDateCalendar.setTime(new Date(fireDate));
-                    final int fireDay = fireDateCalendar.get(Calendar.DAY_OF_MONTH);
-                    final int fireMinute = fireDateCalendar.get(Calendar.MINUTE);
-                    final int fireHour = fireDateCalendar.get(Calendar.HOUR_OF_DAY);
+            case "time":
+                newFireDate = fireDate + repeatTime;
+                break;
+            case "month":
+                final Calendar fireDateCalendar = new GregorianCalendar();
+                fireDateCalendar.setTime(new Date(fireDate));
+                final int fireDay = fireDateCalendar.get(Calendar.DAY_OF_MONTH);
+                final int fireMinute = fireDateCalendar.get(Calendar.MINUTE);
+                final int fireHour = fireDateCalendar.get(Calendar.HOUR_OF_DAY);
 
-                    final Calendar nextEvent = new GregorianCalendar();
-                    nextEvent.setTime(new Date());
-                    final int currentMonth = nextEvent.get(Calendar.MONTH);
-                    int nextMonth = currentMonth < 11 ? (currentMonth + 1) : 0;
-                    nextEvent.set(Calendar.YEAR, nextEvent.get(Calendar.YEAR) + (nextMonth == 0 ? 1 : 0));
-                    nextEvent.set(Calendar.MONTH, nextMonth);
-                    final int maxDay = nextEvent.getActualMaximum(Calendar.DAY_OF_MONTH);
-                    nextEvent.set(Calendar.DAY_OF_MONTH, fireDay <= maxDay ? fireDay : maxDay);
-                    nextEvent.set(Calendar.HOUR_OF_DAY, fireHour);
-                    nextEvent.set(Calendar.MINUTE, fireMinute);
-                    nextEvent.set(Calendar.SECOND, 0);
-                    newFireDate = nextEvent.getTimeInMillis();
-                    break;
-                case "week":
-                    newFireDate = fireDate + 7 * ONE_DAY;
-                    break;
-                case "day":
-                    newFireDate = fireDate + ONE_DAY;
-                    break;
-                case "hour":
-                    newFireDate = fireDate + ONE_HOUR;
-                    break;
-                case "minute":
-                    newFireDate = fireDate + ONE_MINUTE;
-                    break;
+                final Calendar nextEvent = new GregorianCalendar();
+                nextEvent.setTime(new Date());
+                final int currentMonth = nextEvent.get(Calendar.MONTH);
+                int nextMonth = currentMonth < 11 ? (currentMonth + 1) : 0;
+                nextEvent.set(Calendar.YEAR, nextEvent.get(Calendar.YEAR) + (nextMonth == 0 ? 1 : 0));
+                nextEvent.set(Calendar.MONTH, nextMonth);
+                final int maxDay = nextEvent.getActualMaximum(Calendar.DAY_OF_MONTH);
+                nextEvent.set(Calendar.DAY_OF_MONTH, fireDay <= maxDay ? fireDay : maxDay);
+                nextEvent.set(Calendar.HOUR_OF_DAY, fireHour);
+                nextEvent.set(Calendar.MINUTE, fireMinute);
+                nextEvent.set(Calendar.SECOND, 0);
+                newFireDate = nextEvent.getTimeInMillis();
+                break;
+            case "week":
+                newFireDate = fireDate + 7 * ONE_DAY;
+                break;
+            case "day":
+                newFireDate = fireDate + ONE_DAY;
+                break;
+            case "hour":
+                newFireDate = fireDate + ONE_HOUR;
+                break;
+            case "minute":
+                newFireDate = fireDate + ONE_MINUTE;
+                break;
             }
 
             // Sanity check, should never happen
             if (newFireDate != 0) {
                 Log.d(LOG_TAG, String.format("Repeating notification with id %s at time %s", bundle.getString("id"),
-                Long.toString(newFireDate)));
+                        Long.toString(newFireDate)));
                 ArrayList<Parcelable> data = bundle.getParcelableArrayList("data");
                 if (data != null && data.size() >= 0) {
                     Bundle randomData = (Bundle) data.get(getRandomNumberInRange(0, data.size() - 1));
@@ -548,7 +570,7 @@ public class RNPushNotificationHelper {
             }
         }
     }
-    
+
     private static int getRandomNumberInRange(int min, int max) {
 
         if (min >= max) {
@@ -633,6 +655,7 @@ public class RNPushNotificationHelper {
     }
 
     private static boolean channelCreated = false;
+
     private void checkOrCreateChannel(NotificationManager manager) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             return;
@@ -647,34 +670,36 @@ public class RNPushNotificationHelper {
         final String importanceString = bundle.getString("importance");
 
         if (importanceString != null) {
-            switch(importanceString.toLowerCase()) {
-                case "default":
-                    importance = NotificationManager.IMPORTANCE_DEFAULT;
-                    break;
-                case "max":
-                    importance = NotificationManager.IMPORTANCE_MAX;
-                    break;
-                case "high":
-                    importance = NotificationManager.IMPORTANCE_HIGH;
-                    break;
-                case "low":
-                    importance = NotificationManager.IMPORTANCE_LOW;
-                    break;
-                case "min":
-                    importance = NotificationManager.IMPORTANCE_MIN;
-                    break;
-                case "none":
-                    importance = NotificationManager.IMPORTANCE_NONE;
-                    break;
-                case "unspecified":
-                    importance = NotificationManager.IMPORTANCE_UNSPECIFIED;
-                    break;
-                default:
-                    importance = NotificationManager.IMPORTANCE_HIGH;
+            switch (importanceString.toLowerCase()) {
+            case "default":
+                importance = NotificationManager.IMPORTANCE_DEFAULT;
+                break;
+            case "max":
+                importance = NotificationManager.IMPORTANCE_MAX;
+                break;
+            case "high":
+                importance = NotificationManager.IMPORTANCE_HIGH;
+                break;
+            case "low":
+                importance = NotificationManager.IMPORTANCE_LOW;
+                break;
+            case "min":
+                importance = NotificationManager.IMPORTANCE_MIN;
+                break;
+            case "none":
+                importance = NotificationManager.IMPORTANCE_NONE;
+                break;
+            case "unspecified":
+                importance = NotificationManager.IMPORTANCE_UNSPECIFIED;
+                break;
+            default:
+                importance = NotificationManager.IMPORTANCE_HIGH;
             }
         }
 
-        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, this.config.getChannelName() != null ? this.config.getChannelName() : "rn-push-notification-channel", importance);
+        NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
+                this.config.getChannelName() != null ? this.config.getChannelName() : "rn-push-notification-channel",
+                importance);
 
         channel.setDescription(this.config.getChannelDescription());
         channel.enableLights(true);
