@@ -34,28 +34,32 @@ public class ImageUtil {
     }
 
     public static void request(Context context, Uri imageUri, final RequestResultCallback callback) {
-        ImagePipeline imagePipeline = Fresco.getImagePipeline();
+       try{
+            ImagePipeline imagePipeline = Fresco.getImagePipeline();
 
-        ImageRequest imageRequest = ImageRequestBuilder
-                .newBuilderWithSource(imageUri)
-                .setRequestPriority(Priority.HIGH)
-                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
-                .build();
+            ImageRequest imageRequest = ImageRequestBuilder
+                    .newBuilderWithSource(imageUri)
+                    .setRequestPriority(Priority.HIGH)
+                    .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                    .build();
 
-        DataSource<CloseableReference<CloseableImage>> dataSource =
-                imagePipeline.fetchDecodedImage(imageRequest, context);
+            DataSource<CloseableReference<CloseableImage>> dataSource =
+                    imagePipeline.fetchDecodedImage(imageRequest, context);
 
-        dataSource.subscribe(new BaseBitmapDataSubscriber() {
-            @Override
-            public void onNewResultImpl(@Nullable Bitmap bitmap) {
-                callback.onSuccess(bitmap);
-            }
+            dataSource.subscribe(new BaseBitmapDataSubscriber() {
+                @Override
+                public void onNewResultImpl(@Nullable Bitmap bitmap) {
+                    callback.onSuccess(bitmap);
+                }
 
-            @Override
-            public void onFailureImpl(DataSource dataSource) {
-                callback.onFailure(dataSource.getFailureCause());
-            }
-        }, CallerThreadExecutor.getInstance());
+                @Override
+                public void onFailureImpl(DataSource dataSource) {
+                    callback.onFailure(dataSource.getFailureCause());
+                }
+            }, CallerThreadExecutor.getInstance());
+        }catch(java.lang.NullPointerException ex){
+            callback.onFailure(ex);
+        }
     }
 
     public static Bitmap createCircularBitmap(Bitmap bitmap) {
