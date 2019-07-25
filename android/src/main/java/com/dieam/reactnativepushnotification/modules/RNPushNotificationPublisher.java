@@ -1,7 +1,5 @@
 package com.dieam.reactnativepushnotification.modules;
 
-import android.app.ActivityManager;
-import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -75,10 +73,10 @@ public class RNPushNotificationPublisher extends BroadcastReceiver {
             bundle.putString("id", String.valueOf(randomNumberGenerator.nextInt()));
         }
 
-        Boolean isForeground = isApplicationInForeground(context);
+        //Boolean isForeground = isApplicationInForeground(context);
 
         RNPushNotificationJsDelivery jsDelivery = new RNPushNotificationJsDelivery(context);
-        bundle.putBoolean("foreground", isForeground);
+        //bundle.putBoolean("foreground", isForeground);
         jsDelivery.notifyNotification(bundle);
 
         // If contentAvailable is set to true, then send out a remote fetch event
@@ -88,28 +86,10 @@ public class RNPushNotificationPublisher extends BroadcastReceiver {
 
         Log.v(LOG_TAG, "sendNotification: " + bundle);
 
-        if (!isForeground) {
+        //if (!isForeground) {
             Application applicationContext = (Application) context.getApplicationContext();
             RNPushNotificationHelper pushNotificationHelper = new RNPushNotificationHelper(applicationContext);
             pushNotificationHelper.sendToNotificationCentre(bundle);
-        }
-    }
-
-    private boolean isApplicationInForeground(ReactApplicationContext context) {
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(context.ACTIVITY_SERVICE);
-        List<RunningAppProcessInfo> processInfos = activityManager.getRunningAppProcesses();
-        if (processInfos != null) {
-            for (RunningAppProcessInfo processInfo : processInfos) {
-            Application applicationContext = (Application) context.getApplicationContext();
-                if (processInfo.processName.equals(applicationContext.getPackageName())) {
-                    if (processInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                        for (String d : processInfo.pkgList) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
+        //}
     }
 }
